@@ -1,27 +1,28 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AutoMapper;
 using Moq;
 using OAM_Backend.Helpers;
 using OAM_Backend.Models;
-using OAM_Backend.Repositories;
+using OAM_Backend.Models.Responses;
+using OAM_Backend.Services;
 using Xunit;
 
-namespace OAM_Backend.Test.Services
+
+namespace OAM_Backend.Test.Controllers
 {
-    public class UserServiceTest
+
+    public class UsersController
     {
-        private readonly Mock<IUserRepository> _mockUserRepository;
-        private readonly Mock<IMapper> _mockMapper;
-        private readonly Mock<IJwtUtils> _mockJwtUtils;
+        private readonly Mock<IUserService> _mockUserService;
+        private readonly Mock<IAssignmentService> _mockAssignmentService;
 
         static List<User> _user = new List<User>
         {
-            new User
-            {
+             new User
+                   {
                        Id = 1,
                        Staffcode = "SD0001",
                        Username = "ducvm",
@@ -35,9 +36,9 @@ namespace OAM_Backend.Test.Services
                        LogCount = 1,
                        IsActive = true,
                        IsAdmin = true
-            },
-            new User
-            {
+                   },
+                   new User
+                   {
                        Id = 2,
                        Staffcode = "SD0002",
                        Username = "daohq",
@@ -51,9 +52,9 @@ namespace OAM_Backend.Test.Services
                        LogCount = 1,
                        IsActive = true,
                        IsAdmin = true
-            },
-            new User
-            {
+                   },
+                   new User
+                   {
                        Id = 3,
                        Staffcode = "SD0003",
                        Username = "huyennt",
@@ -67,9 +68,9 @@ namespace OAM_Backend.Test.Services
                        LogCount = 1,
                        IsActive = true,
                        IsAdmin = true
-            },
-            new User
-            {
+                   },
+                   new User
+                   {
                        Id = 4,
                        Staffcode = "SD0004",
                        Username = "hungtp",
@@ -83,9 +84,9 @@ namespace OAM_Backend.Test.Services
                        LogCount = 1,
                        IsActive = true,
                        IsAdmin = false
-            },
-            new User
-            {
+                   },
+                   new User
+                   {
                        Id = 5,
                        Staffcode = "SD0005",
                        Username = "phuongnn",
@@ -99,9 +100,9 @@ namespace OAM_Backend.Test.Services
                        LogCount = 1,
                        IsActive = true,
                        IsAdmin = false
-            },
-            new User
-            {
+                   },
+                   new User
+                   {
                        Id = 6,
                        Staffcode = "SD0006",
                        Username = "maibt",
@@ -115,16 +116,60 @@ namespace OAM_Backend.Test.Services
                        LogCount = 1,
                        IsActive = true,
                        IsAdmin = false
-            }
+                   }
         };
 
-        public UserServiceTest()
+        public UsersController()
         {
-            _mockUserRepository = new Mock<IUserRepository>();
-            _mockMapper = new Mock<IMapper>();
-            _mockJwtUtils = new Mock<IJwtUtils>();
-        }
-        
+            _mockUserService = new Mock<IUserService>();
+            _mockAssignmentService = new Mock<IAssignmentService>();
+        } 
 
+        [Fact]
+        public void MockGetAll()
+        {
+           var validAction = new PageAction(
+                1,
+                10,
+                "",
+                "",
+                "",
+                ""
+                );
+            var pagedReponse = PageActionHelper.CreatePagedReponse<User>(
+                _user,
+                validAction,
+                1
+            );
+            _mockUserService.Setup(x => x.GetAll(validAction, "Hanoi", 2)).Returns(pagedReponse);
+            var result = _mockUserService.Object.GetAll(validAction, "Hanoi", 2);
+            Assert.Equal(1, result.TotalPages);
+            Assert.Equal(6, result.Data.Count);
+            Assert.Equal(6, result.Data[5].Id);
+            Assert.Equal("SD0006", result.Data[5].Staffcode);    
+        }
+        [Fact]
+        public void MockGetById()
+        {
+            _mockUserService.Setup(x => x.GetUserByStaffcode("SD0001"))
+                .Returns(_user.Where(x => x.Staffcode == "SD0001").FirstOrDefault());
+            var result = _mockUserService.Object.GetUserByStaffcode("SD0001");
+            Assert.Equal(result, _user[0]);
+        }
+        [Fact]
+        public void MockDisableUser()
+        {
+            _mockUserService.Setup(x => x.DisableUser("SD0001"))
+                .Returns(_user.Where(x => x.Staffcode == "SD0001").FirstOrDefault());
+            _mockAssignmentService.Setup(x => x.GetAssignmentByStaffcode("SD0001"));
+            var check = _mockAssignmentService.Object.GetAssignmentByStaffcode("SD0001");
+            if(check != null)
+            {
+                _mockUserService.Setup(x => x.DisableUser("SD0001")).Returns(_user.Where(x => x.Staffcode == "SD0001").FirstOrDefault());
+                var result = _mockUserService.Object.DisableUser("SD0001");
+                Assert.Equal(result, _user[0]);
+            }      
+        }
+
+        }  
     }
-}

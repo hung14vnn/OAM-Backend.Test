@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Moq;
 using OAM_Backend.Models;
+using OAM_Backend.Models.Responses;
 using OAM_Backend.Services;
 using Xunit;
 
@@ -12,7 +13,7 @@ namespace OAM_Backend.Test.Controllers
 {
     public class UserControllerTest
     {
-        private readonly Mock<IUserService> _mockUserService;
+        private Mock<IUserService> _mockUserService;
         private readonly Mock<IAssignmentService> _mockAssignmentService;
 
         static List<User> _user = new List<User>
@@ -114,6 +115,7 @@ namespace OAM_Backend.Test.Controllers
                        IsAdmin = false
                    }
         };
+
 
         public UserControllerTest()
         {
